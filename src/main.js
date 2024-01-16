@@ -11,10 +11,11 @@ const lightbox = new SimpleLightbox('.gallery a', { captionsData: 'alt', caption
 
 form.addEventListener("submit", (event) => {
     event.preventDefault();
+    showLoader();
 
     const q = event.currentTarget.elements.search.value.trim();
-
-    if (q.length == 0) {
+   
+    if (q.length === 0) {
         iziToast.show({
             title: 'Sorry, there are no images matching your search query. Please try again!Reqest is not ok',
             titleColor: 'white',
@@ -24,7 +25,6 @@ form.addEventListener("submit", (event) => {
         });
     } else {
         renderIMG(q);
-        showLoader();
     }
 });
 
@@ -32,13 +32,13 @@ const getIMG = (query = "") => {
     const url = "https://pixabay.com/api/";
     const searchParams = new URLSearchParams({
         key: "41729431-93e496ed3cd794296b45db789",
-        q: `${query}`,
+        q: query,
         image_type: "photo",
         rientation: "horizontal",
         safesearch: "true"
     });
 
-    return fetch(url + "?" + searchParams)
+    return fetch(`${url}?${searchParams}`)
         .then(response => {
             if (!response.ok) {
                 iziToast.show({
@@ -64,7 +64,8 @@ const getIMG = (query = "") => {
                 });
                 hideLoader();
             }
-        });
+        })
+        .finally(hideLoader());
 }
 
 const getImageHTML = ({largeImageURL, webformatURL, tags, likes, views, comments, downloads}) => `           
@@ -100,11 +101,17 @@ function renderIMG(q) {
     getIMG(q)
         .then(images => {
             gallery.innerHTML = "";
-            images.map(image => {
-                gallery.insertAdjacentHTML("beforeend", getImageHTML(image));
-                lightbox.refresh();
-            })
-            hideLoader();
+            if (images === undefined) {
+                return;
+            } else {
+                const markup = images.map((image => {
+                    return getImageHTML(image);
+                })).join("");
+
+                gallery.insertAdjacentHTML("beforeend", markup);
+                lightbox.refresh();         
+                hideLoader();
+            }
         })
         .catch(error => console.log(error), hideLoader());
 }
@@ -116,4 +123,3 @@ function showLoader() {
 function hideLoader() {
     loader.classList.remove('loading');
 }
-
