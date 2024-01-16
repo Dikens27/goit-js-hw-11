@@ -7,20 +7,50 @@ const form = document.querySelector(".form");
 const gallery = document.querySelector(".gallery");
 const loader = document.querySelector(".loader");
 
-const url = "https://pixabay.com/api/";
+const lightbox = new SimpleLightbox('.gallery a', { captionsData: 'alt', captionDelay: 250 });
 
 form.addEventListener("submit", (event) => {
     event.preventDefault();
 
-    const q = event.currentTarget.elements[0].value;
+    const q = event.currentTarget.elements.search.value.trim();
 
-    renderIMG(q);
-    loader.classList.add('loading');
+    if (q.length == 0) {
+        iziToast.show({
+            title: 'Sorry, there are no images matching your search query. Please try again!Reqest is not ok',
+            titleColor: 'white',
+            color: 'white',
+            backgroundColor: 'red',
+            position: 'topRight',
+        });
+    } else {
+        renderIMG(q);
+        showLoader();
+    }
 });
 
-const getIMG = (q = "") => {
-    return fetch(url + `?key=41729431-93e496ed3cd794296b45db789&q=${q}&image_type=photo&orientation=horizontal&safesearch=true`)
-        .then(response => response.json())
+const getIMG = (query = "") => {
+    const url = "https://pixabay.com/api/";
+    const searchParams = new URLSearchParams({
+        key: "41729431-93e496ed3cd794296b45db789",
+        q: `${query}`,
+        image_type: "photo",
+        rientation: "horizontal",
+        safesearch: "true"
+    });
+
+    return fetch(url + "?" + searchParams)
+        .then(response => {
+            if (!response.ok) {
+                iziToast.show({
+                    title: 'Sorry, there are no images matching your search query. Please try again!Reqest is not ok',
+                    titleColor: 'white',
+                    color: 'white',
+                    backgroundColor: 'red',
+                    position: 'topRight',
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.hits.length) {
                 return data.hits;
@@ -31,10 +61,10 @@ const getIMG = (q = "") => {
                     color: 'white',
                     backgroundColor: 'red',
                     position: 'topRight',
-                }); 
+                });
+                hideLoader();
             }
-         
-        })
+        });
 }
 
 const getImageHTML = ({largeImageURL, webformatURL, tags, likes, views, comments, downloads}) => `           
@@ -71,25 +101,19 @@ function renderIMG(q) {
         .then(images => {
             gallery.innerHTML = "";
             images.map(image => {
-                gallery.insertAdjacentHTML("afterbegin", getImageHTML(image));
-                const lightbox = new SimpleLightbox('.gallery a', { captionsData: 'alt', captionDelay: 250 });
+                gallery.insertAdjacentHTML("beforeend", getImageHTML(image));
+                lightbox.refresh();
             })
-            loader.classList.remove('loading');
+            hideLoader();
         })
-        .catch(error => console(error));
+        .catch(error => console.log(error), hideLoader());
 }
 
+function showLoader() {
+    loader.classList.add('loading');
+}
 
-
-    
-
-
-
-
-
-
-
-
-
-
+function hideLoader() {
+    loader.classList.remove('loading');
+}
 
