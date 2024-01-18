@@ -12,11 +12,13 @@ const lightbox = new SimpleLightbox('.gallery a', { captionsData: 'alt', caption
 form.addEventListener("submit", (event) => {
     event.preventDefault();
     showLoader();
+    gallery.innerHTML = "";
 
     const q = event.currentTarget.elements.search.value.trim();
    
     if (q.length === 0) {
-       showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
+        showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
+        hideLoader();
     } else {
         renderIMG(q);
     }
@@ -83,7 +85,6 @@ const getImageHTML = ({largeImageURL, webformatURL, tags, likes, views, comments
 function renderIMG(q) {
     getIMG(q)
         .then(images => {
-            gallery.innerHTML = "";
             if (images === undefined) {
                 return;
             } else {
