@@ -16,13 +16,7 @@ form.addEventListener("submit", (event) => {
     const q = event.currentTarget.elements.search.value.trim();
    
     if (q.length === 0) {
-        iziToast.show({
-            title: 'Sorry, there are no images matching your search query. Please try again!Reqest is not ok',
-            titleColor: 'white',
-            color: 'white',
-            backgroundColor: 'red',
-            position: 'topRight',
-        });
+       showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
     } else {
         renderIMG(q);
     }
@@ -34,20 +28,15 @@ const getIMG = (query = "") => {
         key: "41729431-93e496ed3cd794296b45db789",
         q: query,
         image_type: "photo",
-        rientation: "horizontal",
+        orientation: "horizontal",
         safesearch: "true"
     });
 
     return fetch(`${url}?${searchParams}`)
         .then(response => {
             if (!response.ok) {
-                iziToast.show({
-                    title: 'Sorry, there are no images matching your search query. Please try again!Reqest is not ok',
-                    titleColor: 'white',
-                    color: 'white',
-                    backgroundColor: 'red',
-                    position: 'topRight',
-                });
+                showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
+                return;
             }
             return response.json();
         })
@@ -55,17 +44,11 @@ const getIMG = (query = "") => {
             if (data.hits.length) {
                 return data.hits;
             } else {
-                iziToast.show({
-                    title: 'Sorry, there are no images matching your search query. Please try again!Reqest is not ok',
-                    titleColor: 'white',
-                    color: 'white',
-                    backgroundColor: 'red',
-                    position: 'topRight',
-                });
+                showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
                 hideLoader();
             }
         })
-        .finally(hideLoader());
+        .finally(hideLoader);
 }
 
 const getImageHTML = ({largeImageURL, webformatURL, tags, likes, views, comments, downloads}) => `           
@@ -113,7 +96,11 @@ function renderIMG(q) {
                 hideLoader();
             }
         })
-        .catch(error => console.log(error), hideLoader());
+        .catch(error => {
+            console.log(error);
+            hideLoader();
+            showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
+        });
 }
 
 function showLoader() {
@@ -122,4 +109,14 @@ function showLoader() {
 
 function hideLoader() {
     loader.classList.remove('loading');
+}
+
+function showErrorToast(message) {
+    iziToast.show({
+        title: message,
+        titleColor: 'white',
+        color: 'white',
+        backgroundColor: 'red',
+        position: 'topRight',
+    });
 }
